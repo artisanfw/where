@@ -63,7 +63,7 @@ try {
     echo "✖ Error: " . $e->getMessage() . "\n";
 }
 ```
-### Make the script executable:
+Make the script executable:
 
 ```bash
 chmod +x geodb_update.php
