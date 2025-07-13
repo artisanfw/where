@@ -3,8 +3,6 @@
 A standalone service for IP geolocation using the MaxMind GeoLite2-City database.  
 This package allows you to query an IP address for location data, and optionally provides a downloader utility to fetch the latest MaxMind database.
 
----
-
 ## Installation
 Require the package and its dependencies via Composer:
 
@@ -29,13 +27,15 @@ Where::load($config);
 ```php
 $info = Where::is('8.8.8.8'); // returns Location object or null
 
-$info->getContinent();
-$info->getCountry();
-$info->getRegion();
-$info->getCity();
-$info->getLatitude();
-$info->getLongitude();
-$info->getTimeZone();
+if ($info) {
+    $info->getContinent();
+    $info->getCountry();
+    $info->getRegion();
+    $info->getCity();
+    $info->getLatitude();
+    $info->getLongitude();
+    $info->getTimeZone();
+}
 ```
 
 ## Downloading the Database
@@ -50,13 +50,14 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Artisan\Downloader\GeoLite2Downloader;
 
-$licenseKey = 'YOUR_MAXMIND_LICENSE_KEY';
-$destinationPath = __DIR__ . '/geodb';
+$config = [
+    'license_key' => 'your_key_here',
+    'mmdb' => '/path/to/geodb/GeoLite2-City.mmdb',
+];
 
-$downloader = new GeoLite2Downloader($licenseKey);
-
+$downloader = new GeoLite2Downloader($config);
 try {
-    $downloader->download($destinationPath);
+    $downloader->download();
     echo "✔ Database downloaded successfully.\n";
 } catch (Throwable $e) {
     echo "✖ Error: " . $e->getMessage() . "\n";
@@ -94,18 +95,20 @@ class GeoLiteDownloadCommand extends Command
     {
         $this
             ->addArgument('license_key', InputArgument::REQUIRED, 'Your MaxMind license key')
-            ->addArgument('path', InputArgument::REQUIRED, 'Destination directory');
+            ->addArgument('mmdb_path', InputArgument::REQUIRED, 'Full destination path of the .mmdb file (e.g. /path/to/GeoLite2-City.mmdb)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $licenseKey = $input->getArgument('license_key');
-        $path = $input->getArgument('path');
+        $config = [
+            'license_key' => $input->getArgument('license_key'),
+            'mmdb' => $input->getArgument('mmdb_path'),
+        ];
 
-        $downloader = new GeoLite2Downloader($licenseKey);
         try {
-            $downloader->download($path, fn($msg) => $output->writeln($msg));
-            $output->writeln('<info>Download successful.</info>');
+            $downloader = new GeoLite2Downloader($config);
+            $downloader->download(fn($msg) => $output->writeln($msg));
+            $output->writeln('<info>GeoLite2 database downloaded successfully.</info>');
             return Command::SUCCESS;
         } catch (\Throwable $e) {
             $output->writeln('<error>Error: ' . $e->getMessage() . '</error>');

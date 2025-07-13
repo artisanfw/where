@@ -4,55 +4,63 @@ namespace Artisan\Downloader;
 
 use PharData;
 use RecursiveIteratorIterator;
+use RuntimeException;
+use InvalidArgumentException;
 
 class GeoLite2Downloader
 {
     private string $licenseKey;
     private string $editionId;
+    private string $destinationPath;
     private string $tmpDir;
-    private string $filename;
 
-    public function __construct(string $licenseKey, string $editionId = 'GeoLite2-City')
+    public function __construct(array $config)
     {
-        $this->licenseKey = $licenseKey;
-        $this->editionId = $editionId;
+        if (empty($config['license_key'])) {
+            throw new InvalidArgumentException('Missing "license_key" in config.');
+        }
+        if (empty($config['mmdb'])) {
+            throw new InvalidArgumentException('Missing "mmdb" path in config.');
+        }
+
+        $this->licenseKey = $config['license_key'];
+        $this->editionId = $config['edition_id'] ?? 'GeoLite2-City';
+        $this->destinationPath = $config['mmdb'];
         $this->tmpDir = sys_get_temp_dir() . '/geoip_' . uniqid();
-        $this->filename = $editionId . '.mmdb';
     }
 
-    public function download(string $destinationPath, ?callable $logger = null): string
+    public function download(?callable $logger = null): string
     {
         $this->log("Starting GeoLite2 download...", $logger);
 
-        $this->prepareDirectories($destinationPath, $logger);
-        $url = $this->buildUrl();
+        $destDir = dirname($this->destinationPath);
+        $this->prepareDirectories($destDir, $logger);
 
+        $url = $this->buildUrl();
         $compressedFile = $this->tmpDir . '/GeoLite2.tar.gz';
         $tarFile = $this->tmpDir . '/GeoLite2.tar';
 
-        $this->log("Downloading ...", $logger);
+        $this->log("Downloading archive...", $logger);
         file_put_contents($compressedFile, fopen($url, 'r'));
 
-        $this->log("Decompressing archive...", $logger);
+        $this->log("Decompressing...", $logger);
         $phar = new PharData($compressedFile);
         $phar->decompress();
 
         $tar = new PharData($tarFile);
         $mmdbPath = $this->findMmdbPath($tar);
 
-        $this->log("Extracting database file...", $logger);
+        $this->log("Extracting database...", $logger);
         $tar->extractTo($this->tmpDir, $mmdbPath, true);
 
         $sourceFile = $this->tmpDir . DIRECTORY_SEPARATOR . $mmdbPath;
-        $destinationFile = rtrim($destinationPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $this->filename;
-
-        $this->log("Moving file to: $destinationFile", $logger);
-        rename($sourceFile, $destinationFile);
+        $this->log("Moving file to: {$this->destinationPath}", $logger);
+        rename($sourceFile, $this->destinationPath);
 
         $this->cleanup();
 
         $this->log("Download complete.", $logger);
-        return $destinationFile;
+        return $this->destinationPath;
     }
 
     private function buildUrl(): string
@@ -84,7 +92,7 @@ class GeoLite2Downloader
                 return str_replace("phar://{$tar->getPathname()}/", '', $file->getPathname());
             }
         }
-        throw new \RuntimeException("MMDB file not found in archive.");
+        throw new RuntimeException("MMDB file not found in archive.");
     }
 
     private function cleanup(): void
