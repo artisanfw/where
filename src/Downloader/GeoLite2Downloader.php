@@ -26,7 +26,7 @@ class GeoLite2Downloader
         $this->licenseKey = $config['license_key'];
         $this->editionId = $config['edition_id'] ?? 'GeoLite2-City';
         $this->destinationPath = $config['mmdb'];
-        $this->tmpDir = sys_get_temp_dir() . '/geoip_' . uniqid();
+        $this->tmpDir = sys_get_temp_dir() . '/geoip' ;
     }
 
     public function download(?callable $logger = null): string
