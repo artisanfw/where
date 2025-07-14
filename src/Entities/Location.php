@@ -4,14 +4,14 @@ namespace Artisan\Entities;
 
 class Location
 {
-    public string $continent;
-    public string $country;
-    public string $ISO;
-    public string $region;
-    public string $city;
-    public float $latitude;
-    public float $longitude;
-    public string $timezone;
+    private string $continent;
+    private string $country;
+    private string $ISO;
+    private string $region;
+    private string $city;
+    private float $latitude;
+    private float $longitude;
+    private string $timezone;
 
     public function __construct(
         string $continent,
