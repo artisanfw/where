@@ -92,17 +92,10 @@ class GeoLite2Downloader
 
     private function findMmdbPath(PharData $tar): string
     {
-        $base = realpath($tar->getPathname());
-
         foreach (new RecursiveIteratorIterator($tar) as $file) {
             if (str_ends_with($file->getFilename(), '.mmdb')) {
                 $fullPath = $file->getPathname();
-                // Strip the "phar://<archive>/" part to get the relative path
-                $prefix = "phar://{$base}/";
-                if (str_starts_with($fullPath, $prefix)) {
-                    return substr($fullPath, strlen($prefix));
-                }
-                throw new RuntimeException("Failed to determine relative path of MMDB.");
+                return explode('GeoLite2.tar/', $fullPath)[1];
             }
         }
 
