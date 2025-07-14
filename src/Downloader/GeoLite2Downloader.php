@@ -41,6 +41,10 @@ class GeoLite2Downloader
         $compressedFile = $this->tmpDir . '/GeoLite2.tar.gz';
         $tarFile = $this->tmpDir . '/GeoLite2.tar';
 
+        if (file_exists($tarFile)) {
+            unlink($tarFile);
+        }
+
         $this->log("Downloading archive...", $logger);
         file_put_contents($compressedFile, fopen($url, 'r'));
 
