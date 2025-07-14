@@ -94,7 +94,7 @@ class GeoLite2Downloader
     {
         foreach (new RecursiveIteratorIterator($tar) as $file) {
             if (str_ends_with($file->getFilename(), '.mmdb')) {
-                return $file->getRelativePathname();
+                return str_replace("phar://{$tar->getPathname()}/", '', $file->getPathname());
             }
         }
         throw new RuntimeException("MMDB file not found in archive.");
