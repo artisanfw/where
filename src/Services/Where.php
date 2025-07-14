@@ -17,8 +17,8 @@ class Where
      */
     public static function load(array $config): void
     {
-        if (empty($config['mmdb']) || !is_file($config['mmdb'])) {
-            throw new \InvalidArgumentException('Invalid mmdb file path');
+        if (empty($config['mmdb'])) {
+            throw new \InvalidArgumentException('Missing "mmdb" path in config.');
         }
         self::$mmdb = new Reader($config['mmdb']);
     }
