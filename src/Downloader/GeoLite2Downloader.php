@@ -33,6 +33,7 @@ class GeoLite2Downloader
     {
         $this->log("Starting GeoLite2 download...", $logger);
 
+        $this->cleanup();
         $destDir = dirname($this->destinationPath);
         $this->prepareDirectories($destDir, $logger);
 
@@ -89,7 +90,7 @@ class GeoLite2Downloader
     {
         foreach (new RecursiveIteratorIterator($tar) as $file) {
             if (str_ends_with($file->getFilename(), '.mmdb')) {
-                return str_replace("phar://{$tar->getPathname()}/", '', $file->getPathname());
+                return $file->getRelativePathname();
             }
         }
         throw new RuntimeException("MMDB file not found in archive.");
