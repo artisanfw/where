@@ -86,7 +86,7 @@ class Where
         ];
     }
 
-    public static function isValidCountry(string $code): bool
+    public static function validCountry(string $code): bool
     {
         return in_array(trim(strtoupper($code)), self::allISO2Countries());
     }
